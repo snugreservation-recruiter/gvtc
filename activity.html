@@ -1,0 +1,123 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>3‑stage gentle redirect</title>
+  <style>
+    /* base reset & full viewport coverage */
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-family: system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+      transition: background-color 0.15s ease;
+    }
+
+    /* main container – fills the screen, holds the blank stage */
+    .redirect-stage {
+      position: fixed;
+      inset: 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background-color: #fcfcfc; /* will be overridden by JS */
+      transition: background-color 0.25s ease;
+    }
+
+    /* purely optional, but makes the "blank page" feel intentional */
+    .stage-message {
+      font-size: 0.9rem;
+      letter-spacing: 0.03em;
+      color: #888;
+      opacity: 0.5;
+      user-select: none;
+      pointer-events: none;
+      text-align: center;
+    }
+
+    /* hide any potential scrollbars during the show */
+    body {
+      overflow: hidden;
+    }
+  </style>
+</head>
+<body>
+  <div class="redirect-stage" id="stage">
+    <div class="stage-message" id="message"></div>
+  </div>
+
+  <script>
+    (function() {
+      // --------------------------------------------------------------
+      // 👇 PUT YOUR DESTINATION URL HERE 👇
+      const REDIRECT_URL = "https://example.com";   // ← change this
+      // --------------------------------------------------------------
+
+      // Three white‑to‑grey shades (very light, light, soft grey)
+      const SHADES = [
+        "#ffffff",   // pure white
+        "#f2f2f2",   // very light grey
+        "#e0e0e0"    // soft grey
+      ];
+
+      // Each stage lasts exactly 1 second → total 3 seconds before redirect
+      const STAGE_DURATION = 1000; // 1 second per shade
+
+      const stageEl = document.getElementById('stage');
+      const messageEl = document.getElementById('message');
+
+      // optional tiny label for each stage (makes the "blank" pages distinguishable)
+      // you can remove or change the texts if you prefer absolutely blank pages
+      const STAGE_LABELS = ['', '', ''];   // empty strings = no text
+
+      let currentIndex = 0;
+      let timeoutId = null;
+
+      // Helper: apply a shade + (optional) label
+      function applyStage(index) {
+        if (index < 0 || index >= SHADES.length) return;
+        stageEl.style.backgroundColor = SHADES[index];
+        if (messageEl) {
+          messageEl.textContent = STAGE_LABELS[index] || '';
+        }
+      }
+
+      // Move to the next shade, or redirect if we've finished all three
+      function nextStage() {
+        currentIndex++;
+
+        if (currentIndex < SHADES.length) {
+          // show next shade
+          applyStage(currentIndex);
+          // schedule the following transition
+          timeoutId = setTimeout(nextStage, STAGE_DURATION);
+        } else {
+          // all three shades have been shown → redirect
+          if (timeoutId) clearTimeout(timeoutId);
+          window.location.href = REDIRECT_URL;
+        }
+      }
+
+      // Start the sequence: first shade is already displayed via CSS defaults,
+      // but we set it explicitly to be safe (plus label if any)
+      applyStage(0);
+
+      // Kick off the timer for the second shade after 1 second
+      timeoutId = setTimeout(nextStage, STAGE_DURATION);
+
+      // (optional) clean up timeout if the page is unloaded early
+      window.addEventListener('beforeunload', function() {
+        if (timeoutId) clearTimeout(timeoutId);
+      });
+    })();
+  </script>
+</body>
+</html>
