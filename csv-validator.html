@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Lite 1.6 · Email Extractor + MX Validator</title>
+<title>Lite 1.8 · Email Extractor + MX Validator (GoPhish export)</title>
 <style>
   *{margin:0;padding:0;box-sizing:border-box;font-family:'Segoe UI',Roboto,system-ui,sans-serif}
   body{background:#1e1e2f;background-image:radial-gradient(circle at 10% 20%,#2a2a40,#12121c);min-height:100vh;display:flex;justify-content:center;align-items:flex-start;padding:24px 16px}
@@ -33,6 +33,8 @@
   .btn-success:hover{background:#12855a;border-color:#12855a}
   .btn-download{background:#2e3b4e;color:#fff;border-color:#2e3b4e}
   .btn-download:hover{background:#1f2a38;border-color:#1f2a38}
+  .btn-gophish{background:#6d28d9;color:#fff;border-color:#6d28d9}
+  .btn-gophish:hover{background:#7c3aed;border-color:#7c3aed}
   .btn:disabled{opacity:.45;pointer-events:none}
   .counter{font-size:.9rem;background:#e9eef5;padding:7px 16px;border-radius:40px;color:#1d2b3a;font-weight:500;display:flex;gap:16px;flex-wrap:wrap}
   .counter span{display:flex;align-items:center;gap:5px}
@@ -46,6 +48,9 @@
   .options{display:flex;gap:16px;flex-wrap:wrap;margin:2px 0 10px;font-size:.83rem;color:#37485f;align-items:center}
   .options label{display:flex;align-items:center;gap:6px;cursor:pointer;user-select:none}
   .options input[type=checkbox]{accent-color:#2a5c9a;width:15px;height:15px}
+  .options select{appearance:none;-webkit-appearance:none;background:#fff url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'><path d='M2 4l4 4 4-4' stroke='%231f3a5f' stroke-width='1.6' fill='none' stroke-linecap='round' stroke-linejoin='round'/></svg>") no-repeat right 10px center;border:1px solid #cbd5e1;border-radius:50px;padding:7px 30px 7px 14px;font-size:.83rem;font-weight:600;color:#1f3a5f;cursor:pointer;transition:.15s}
+  .options select:hover{border-color:#a0b8d4;background-color:#f0f4fe}
+  .options select:focus{outline:none;border-color:#2a5c9a;box-shadow:0 0 0 3px rgba(42,92,154,.15)}
   .verify-log{font-size:.75rem;color:#4a5c74;margin-top:6px;max-height:56px;overflow:auto;background:#f2f6fc;border-radius:8px;padding:6px 10px;font-family:monospace}
   @media(max-width:760px){.panels{grid-template-columns:1fr}.header h1{font-size:1.45rem}.card{padding:18px 14px}.btn{padding:9px 16px;font-size:.83rem}}
 </style>
@@ -53,7 +58,7 @@
 <body>
 <div class="card">
   <div class="header">
-    <h1>📧 Lite 1.6 <span>MX‑Validated</span></h1>
+    <h1>📧 Lite 1.8 <span>MX‑Validated</span></h1>
     <label for="fileInput" class="file-upload-label">📎 Upload email list (.txt / .csv)</label>
     <input type="file" id="fileInput" accept=".txt,.csv,.text,text/plain,text/csv">
   </div>
@@ -70,9 +75,16 @@
   </div>
 
   <div class="options">
-    <label><input type="checkbox" id="chkMx" checked> DNS MX check (real domain lookup)</label>
-    <label><input type="checkbox" id="chkDisposable" checked> Reject disposable domains</label>
-    <label><input type="checkbox" id="chkRole"> Reject role‑based (info@, admin@...)</label>
+    <label><input type="checkbox" id="chkMx" checked> DNS MX check</label>
+    <label><input type="checkbox" id="chkDisposable" checked> Reject disposable</label>
+    <label><input type="checkbox" id="chkRole"> Reject role‑based</label>
+    <label for="sortSelect" style="margin-left:auto">Order:
+      <select id="sortSelect" aria-label="Output order">
+        <option value="original" selected>Original order</option>
+        <option value="alpha">Alphabetical (A→Z)</option>
+        <option value="random">Random (shuffle)</option>
+      </select>
+    </label>
   </div>
 
   <div class="progress-wrap"><div class="progress-bar" id="progressBar"></div></div>
@@ -81,8 +93,9 @@
   <div class="status-bar">
     <div class="btn-group">
       <button id="validateBtn" class="btn btn-primary">⚡ Validate &amp; Extract</button>
-      <button id="downloadAllBtn" class="btn btn-download">⬇️ Download all (CSV)</button>
-      <button id="downloadValidBtn" class="btn btn-success">✅ Download validated (CSV)</button>
+      <button id="downloadValidBtn" class="btn btn-success">✅ Validated emails (CSV)</button>
+      <button id="downloadGophishBtn" class="btn btn-gophish">🎯 GoPhish import (CSV)</button>
+      <button id="downloadAllBtn" class="btn btn-download">⬇️ All emails (CSV)</button>
       <button id="clearBtn" class="btn">🗑️ Clear</button>
     </div>
     <div class="counter">
@@ -95,6 +108,10 @@
 
   <div class="note">
     <b>Important:</b> A browser cannot do SMTP mailbox checks (that needs a backend / paid API like ZeroBounce or NeverBounce). This tool performs <b>DNS MX validation</b> — it confirms the domain actually has a mail server, which catches the majority of dead addresses (typos, expired domains, fake domains). Emails on a live domain but non‑existent mailboxes (e.g. <code>random1234@gmail.com</code>) cannot be detected client‑side.
+    <br><br>
+    <b>GoPhish:</b> use the purple <b>GoPhish import</b> button — it produces the exact <code>First Name,Last Name,Email,Position</code> header GoPhish expects under <i>Users &amp; Groups → Import CSV</i>.
+    <br><br>
+    <b>Order:</b> the dropdown controls the order of the validated output and of every CSV export. "Random" reshuffles every time you change the dropdown (or re‑run validation).
   </div>
 </div>
 
@@ -106,6 +123,7 @@
         validateBtn=document.getElementById('validateBtn'),
         downloadAllBtn=document.getElementById('downloadAllBtn'),
         downloadValidBtn=document.getElementById('downloadValidBtn'),
+        downloadGophishBtn=document.getElementById('downloadGophishBtn'),
         clearBtn=document.getElementById('clearBtn'),
         totalCountEl=document.getElementById('totalCount'),
         validCountEl=document.getElementById('validCount'),
@@ -115,9 +133,11 @@
         verifyLog=document.getElementById('verifyLog'),
         chkMx=document.getElementById('chkMx'),
         chkDisposable=document.getElementById('chkDisposable'),
-        chkRole=document.getElementById('chkRole');
+        chkRole=document.getElementById('chkRole'),
+        sortSelect=document.getElementById('sortSelect');
 
   let allEmails=[], validEmails=[], invalidEmails=[];
+  let originalValidOrder=[];   // insertion order from validation (before any sorting)
   let running=false;
   let currentAbort=null;
 
@@ -157,7 +177,7 @@
   }
 
   // ---------- DNS-over-HTTPS MX LOOKUP (cached + dedup) ----------
-  const dnsCache=new Map();      // domain -> Promise<boolean>
+  const dnsCache=new Map();
   const DNS_TIMEOUT=6000;
 
   async function dohQuery(domain,type,signal){
@@ -221,6 +241,31 @@
     return new Date().toISOString().slice(0,19).replace(/[:T]/g,'-');
   }
 
+  // ---------- ORDERING ----------
+  function shuffle(arr){
+    const a=arr.slice();
+    for(let i=a.length-1;i>0;i--){
+      const j=Math.floor(Math.random()*(i+1));
+      const t=a[i];a[i]=a[j];a[j]=t;
+    }
+    return a;
+  }
+
+  function applyOrder(list){
+    const mode=sortSelect.value;
+    if(mode==='alpha')return list.slice().sort((a,b)=>a.localeCompare(b));
+    if(mode==='random')return shuffle(list);
+    return list.slice(); // original
+  }
+
+  // Re-render the validated output textarea using current order.
+  // Never mutates originalValidOrder / validEmails (they stay insertion-order).
+  function renderOutput(){
+    const ordered=applyOrder(originalValidOrder);
+    outputArea.value=ordered.join('\n');
+    return ordered;
+  }
+
   // ---------- MAIN VALIDATION PIPELINE ----------
   async function runValidation(){
     if(running)return;
@@ -231,7 +276,7 @@
 
     if(unique.length===0){
       outputArea.value='';
-      allEmails=[];validEmails=[];invalidEmails=[];
+      allEmails=[];validEmails=[];invalidEmails=[];originalValidOrder=[];
       updateCounters(0,0,0,0);
       progressBar.style.width='0%';
       log('No emails found in input.');
@@ -242,6 +287,7 @@
     allEmails=unique;
     validEmails=[];
     invalidEmails=[];
+    originalValidOrder=[];
     dnsCache.clear();
 
     const useMx=chkMx.checked;
@@ -294,9 +340,10 @@
           const ok=await hasMxOrA(c.domain,signal);
           if(signal.aborted)return;
           if(!ok)invalidEmails.push({email,reason:`No MX/A record for ${c.domain}`});
-          else validEmails.push(email);
+          else { validEmails.push(email); originalValidOrder.push(email); }
         }else{
           validEmails.push(email);
+          originalValidOrder.push(email);
         }
         done++;
         bumpUi(false);
@@ -312,48 +359,79 @@
       return;
     }
 
-    validEmails.sort();
-    outputArea.value=validEmails.join('\n');
+    // Render with the chosen order (does NOT destroy the original insertion order)
+    renderOutput();
     bumpUi(true);
     progressBar.style.width='100%';
 
     const reasons={};
     for(const x of invalidEmails)reasons[x.reason]=(reasons[x.reason]||0)+1;
     const summary=Object.entries(reasons).map(([r,c])=>`${c}× ${r}`).join(' | ')||'none';
-    log(`Done. ${validEmails.length} valid, ${invalidEmails.length} removed · unique domains:${dnsCache.size}. ${summary}`);
+    const orderLabel=sortSelect.options[sortSelect.selectedIndex].text;
+    log(`Done. ${validEmails.length} valid, ${invalidEmails.length} removed · order:${orderLabel} · unique domains:${dnsCache.size}. ${summary}`);
 
     running=false;
     validateBtn.disabled=false;
   }
 
-  // ---------- CSV DOWNLOAD ----------
-  function downloadCSV(rows,prefix){
-    if(!rows||rows.length===0){alert('Nothing to download.');return;}
-    const csv=rows.map(e=>{
-      const s=typeof e==='string'?e:e.email;
-      return (s.includes(',')||s.includes('"')||s.includes('\n'))?`"${s.replace(/"/g,'""')}"`:s;
-    }).join('\r\n');
+  // ---------- CSV GENERATION ----------
+  function q(s){
+    s=String(s==null?'':s);
+    return /[",\r\n]/.test(s) ? '"'+s.replace(/"/g,'""')+'"' : s;
+  }
 
-    // UTF-8 BOM so Excel and Windows recognize this as proper UTF-8 CSV
+  function namePartsFromEmail(email){
+    const local=email.slice(0,email.lastIndexOf('@'));
+    const clean=local.split('+')[0].replace(/[._\-]+/g,' ').replace(/\d+/g,' ').trim();
+    const parts=clean.split(/\s+/).filter(Boolean);
+    if(parts.length===0)return{first:'',last:''};
+    const cap=p=>p.charAt(0).toUpperCase()+p.slice(1).toLowerCase();
+    if(parts.length===1)return{first:cap(parts[0]),last:''};
+    return{first:cap(parts[0]),last:cap(parts[parts.length-1])};
+  }
+
+  // ---------- DOWNLOAD ----------
+  function triggerDownload(text,filename,mime){
     const BOM='\uFEFF';
-
-    // application/vnd.ms-excel forces Windows to associate the file with
-    // a spreadsheet (not Notepad) and makes Excel open it in columns.
-    const blob=new Blob([BOM+csv],{type:'application/vnd.ms-excel;charset=utf-8'});
-
+    const blob=new Blob([BOM+text],{type:mime+';charset=utf-8'});
     const url=URL.createObjectURL(blob);
     const a=document.createElement('a');
     a.href=url;
-    a.download=`${prefix}_${ts()}.csv`;
+    a.download=filename;
     a.rel='noopener';
     a.style.display='none';
     document.body.appendChild(a);
     a.click();
-    // Defer cleanup so the browser can start the download before revoke
     setTimeout(()=>{
       if(a.parentNode)a.parentNode.removeChild(a);
       URL.revokeObjectURL(url);
     },1500);
+    const bytes=blob.size;
+    const kb=(bytes/1024).toFixed(2);
+    log(`Downloaded ${filename} · ${bytes} bytes (${kb} KB) · ${text.split(/\r?\n/).length} lines`);
+  }
+
+  function downloadPlain(rows,prefix){
+    if(!rows||rows.length===0){alert('Nothing to download.');return;}
+    const ordered=applyOrder(rows);
+    const csv=ordered.map(q).join('\r\n');
+    triggerDownload(csv,`${prefix}_${ts()}.csv`,'text/csv');
+  }
+
+  function downloadGophish(rows){
+    if(!rows||rows.length===0){
+      if(allEmails.length===0){alert('Run validation first.');return;}
+      alert('No emails passed validation — nothing to export.');
+      return;
+    }
+    const ordered=applyOrder(rows);
+    const lines=['First Name,Last Name,Email,Position'];
+    for(const e of ordered){
+      const email=typeof e==='string'?e:e.email;
+      const {first,last}=namePartsFromEmail(email);
+      lines.push([q(first),q(last),q(email),q('')].join(','));
+    }
+    triggerDownload(lines.join('\r\n'),`gophish_targets_${ts()}.csv`,'text/csv');
   }
 
   function downloadAll(){
@@ -363,26 +441,36 @@
       allEmails=u;
       updateCounters(allEmails.length,0,0,0);
     }
-    downloadCSV(allEmails,'all_emails');
+    downloadPlain(allEmails,'all_emails');
   }
 
   function downloadValidated(){
-    if(validEmails.length===0){
-      if(allEmails.length===0){
-        alert('Run validation first.');
-      }else{
-        alert('No emails passed validation.');
-      }
+    if(originalValidOrder.length===0){
+      if(allEmails.length===0){alert('Run validation first.');}
+      else{alert('No emails passed validation.');}
       return;
     }
-    downloadCSV(validEmails,'validated_emails');
+    downloadPlain(originalValidOrder,'validated_emails');
+  }
+
+  function downloadGophishClick(){
+    const rows=originalValidOrder.length?originalValidOrder:allEmails;
+    if(rows.length===0){
+      const u=extractUnique(inputArea.value);
+      if(u.length===0){alert('No emails in input.');return;}
+      allEmails=u;
+      updateCounters(allEmails.length,0,0,0);
+      downloadGophish(allEmails);
+      return;
+    }
+    downloadGophish(rows);
   }
 
   function clearAll(){
     if(currentAbort)currentAbort.abort();
     inputArea.value='';
     outputArea.value='';
-    allEmails=[];validEmails=[];invalidEmails=[];
+    allEmails=[];validEmails=[];invalidEmails=[];originalValidOrder=[];
     dnsCache.clear();
     updateCounters(0,0,0,0);
     progressBar.style.width='0%';
@@ -398,7 +486,6 @@
     const r=new FileReader();
     r.onload=ev=>{
       let text=ev.target.result;
-      // Strip UTF-8 BOM if present so the first email isn't prefixed with \uFEFF
       if(text.charCodeAt(0)===0xFEFF)text=text.slice(1);
       inputArea.value=text;
       runValidation();
@@ -411,13 +498,22 @@
   validateBtn.addEventListener('click',runValidation);
   downloadAllBtn.addEventListener('click',downloadAll);
   downloadValidBtn.addEventListener('click',downloadValidated);
+  downloadGophishBtn.addEventListener('click',downloadGophishClick);
   clearBtn.addEventListener('click',clearAll);
   fileInput.addEventListener('change',handleFile);
+
+  // Changing order re-renders on-screen output (and reshuffles if "Random")
+  sortSelect.addEventListener('change',()=>{
+    if(originalValidOrder.length){
+      renderOutput();
+      log(`Order changed → ${sortSelect.options[sortSelect.selectedIndex].text}.`);
+    }
+  });
 
   inputArea.addEventListener('input',()=>{
     if(inputArea.value.trim()===''){
       outputArea.value='';
-      allEmails=[];validEmails=[];invalidEmails=[];
+      allEmails=[];validEmails=[];invalidEmails=[];originalValidOrder=[];
       updateCounters(0,0,0,0);
       progressBar.style.width='0%';
     }
