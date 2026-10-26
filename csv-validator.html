@@ -55,7 +55,7 @@
   <div class="header">
     <h1>📧 Lite 1.6 <span>MX‑Validated</span></h1>
     <label for="fileInput" class="file-upload-label">📎 Upload email list (.txt / .csv)</label>
-    <input type="file" id="fileInput" accept=".txt,.csv,.text,text/plain">
+    <input type="file" id="fileInput" accept=".txt,.csv,.text,text/plain,text/csv">
   </div>
 
   <div class="panels">
@@ -150,9 +150,8 @@
     if(ROLE_SET.has(local))return true;
     for(let i=0;i<ROLE_PREFIXES.length;i++){
       const p=ROLE_PREFIXES[i];
-      if(local.charCodeAt(p.length)===46||local.charCodeAt(p.length)===45||local.charCodeAt(p.length)===95){
-        if(local.startsWith(p))return true;
-      }
+      const c=local.charCodeAt(p.length);
+      if((c===46||c===45||c===95)&&local.startsWith(p))return true;
     }
     return false;
   }
@@ -164,7 +163,6 @@
   async function dohQuery(domain,type,signal){
     const ctrl=new AbortController();
     const timer=setTimeout(()=>ctrl.abort(),DNS_TIMEOUT);
-    // chain external abort to internal
     const onAbort=()=>ctrl.abort();
     if(signal)signal.addEventListener('abort',onAbort,{once:true});
     try{
@@ -183,7 +181,6 @@
   }
 
   async function checkDomain(domain,signal){
-    // Fire MX and A in parallel; accept if either succeeds.
     const [mx,a]=await Promise.all([
       dohQuery(domain,'MX',signal),
       dohQuery(domain,'A',signal)
@@ -252,7 +249,6 @@
     const useRole=chkRole.checked;
     const total=unique.length;
 
-    // fresh abort for this run
     if(currentAbort)currentAbort.abort();
     currentAbort=new AbortController();
     const signal=currentAbort.signal;
@@ -262,7 +258,7 @@
 
     let done=0;
     let lastUi=0;
-    const UI_THROTTLE=80; // ms — batch DOM writes
+    const UI_THROTTLE=80;
 
     function bumpUi(force){
       const now=performance.now();
@@ -274,7 +270,6 @@
     }
 
     function classify(email){
-      // returns {ok:true} or {ok:false, reason}
       if(!syntaxOk(email))return{ok:false,reason:'Invalid syntax'};
       const at=email.lastIndexOf('@');
       const domain=email.slice(at+1);
@@ -313,7 +308,6 @@
     await Promise.all(workers);
 
     if(signal.aborted){
-      // user cleared/cancelled — don't finalize
       running=false;validateBtn.disabled=false;
       return;
     }
@@ -337,21 +331,29 @@
     if(!rows||rows.length===0){alert('Nothing to download.');return;}
     const csv=rows.map(e=>{
       const s=typeof e==='string'?e:e.email;
-      return (s.includes(',')||s.includes('"'))?`"${s.replace(/"/g,'""')}"`:s;
+      return (s.includes(',')||s.includes('"')||s.includes('\n'))?`"${s.replace(/"/g,'""')}"`:s;
     }).join('\r\n');
-    const blob=new Blob([csv],{type:'text/csv;charset=utf-8;'});
+
+    // UTF-8 BOM so Excel and Windows recognize this as proper UTF-8 CSV
+    const BOM='\uFEFF';
+
+    // application/vnd.ms-excel forces Windows to associate the file with
+    // a spreadsheet (not Notepad) and makes Excel open it in columns.
+    const blob=new Blob([BOM+csv],{type:'application/vnd.ms-excel;charset=utf-8'});
+
     const url=URL.createObjectURL(blob);
     const a=document.createElement('a');
     a.href=url;
     a.download=`${prefix}_${ts()}.csv`;
+    a.rel='noopener';
     a.style.display='none';
     document.body.appendChild(a);
     a.click();
-    // Defer cleanup so the browser can actually start the download
+    // Defer cleanup so the browser can start the download before revoke
     setTimeout(()=>{
       if(a.parentNode)a.parentNode.removeChild(a);
       URL.revokeObjectURL(url);
-    },1000);
+    },1500);
   }
 
   function downloadAll(){
@@ -359,7 +361,6 @@
       const u=extractUnique(inputArea.value);
       if(u.length===0){alert('No emails in input.');return;}
       allEmails=u;
-      // keep counters in sync so the UI reflects what's on screen
       updateCounters(allEmails.length,0,0,0);
     }
     downloadCSV(allEmails,'all_emails');
@@ -396,7 +397,10 @@
     if(!f)return;
     const r=new FileReader();
     r.onload=ev=>{
-      inputArea.value=ev.target.result;
+      let text=ev.target.result;
+      // Strip UTF-8 BOM if present so the first email isn't prefixed with \uFEFF
+      if(text.charCodeAt(0)===0xFEFF)text=text.slice(1);
+      inputArea.value=text;
       runValidation();
     };
     r.readAsText(f);
